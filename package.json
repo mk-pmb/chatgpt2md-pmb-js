@@ -1,0 +1,31 @@
+{ "name": "chatgpt2md-pmb",
+  "version": "0.1.0",
+  "description": "Reformat ChatGPT's markdown towards my own style.",
+  "keywords": [],
+
+  "author": "M.K. (https://github.com/mk-pmb)",
+  "homepage": "https://github.com/mk-pmb/chatgpt2md-pmb-js/#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mk-pmb/chatgpt2md-pmb-js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mk-pmb/chatgpt2md-pmb-js/issues"
+  },
+  "contributors": [],
+
+  "private": true, "license": "ISC",
+
+  "main": "reformat.js",
+  "bin": "cli.js",
+
+  "dependencies": {
+    "ersatz-linewrap": "^0.1.1",
+    "txtrafo": "^0.0.3"
+  },
+  "devDependencies": {
+  },
+
+
+  "engines": { "npm": ">=7.0.0", "node": ">=16.0.0" }
+}
