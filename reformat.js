@@ -12,7 +12,7 @@ EX = function reformat(input) {
     '\n* __$1:__\n  $2');
   tx = linewrap(tx, { width: 80 });
   // tx = tx.replace(/((?:^|\n)[ -\uFFFF]{80})/g, '$1 ¦ ');
-  return tx;
+  return tx.trim() + '\n';
 };
 
 
