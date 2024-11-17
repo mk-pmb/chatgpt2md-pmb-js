@@ -3,23 +3,43 @@
 /* -*- tab-width: 2 -*- */
 'use strict';
 
-var EX, linewrap = require('ersatz-linewrap');
+var EX, linewrap = require('ersatz-linewrap'),
+  rxu = require('rxu');
 
 
 EX = function reformat(input) {
   var tx = input;
   tx = tx.replace(/\r|\f|\v/g, '');
-  tx = tx.replace(/\n\d+\. \*{2}([ -\)\+-\uFFFF]+)\*{2}:\n? +(\S[ -\uFFFF]*)/g,
-    '\n* __$1:__\n  $2');
-  tx = tx.replace(/\n {2,}\- \*{2}([ -\)\+-\uFFFF]+)\*{2}:\s+(\S[ -\uFFFF]*)/g,
-    '\n  * __$1:__\n    $2');
+  tx = tx.replace(EX.colonAfterBoldKeywordShouldBeBoldAsWell, '$1:$2$3');
+  tx = tx.replace(EX.listItemWithBoldKeywordColon,  '\n$1* __$2__\n$1  $3');
   tx = tx.replace(/\n {2,}\- /g, '\n  * ');
+
+  // Blank line after heading:
+  tx = tx.replace(/\n(#{2,4}) (\S[ -\uFFFF]+)\n+/g, '\n$1 $2\n\n');
+  // Adjust blank lines before headings:
+  tx = tx.replace(/\n+(#{1,2} )/g, '\n\n\n\n$1');
+  tx = tx.replace(/\n+(#{3,} )/g, '\n\n\n$1');
+
   tx = EX.unindentIndentedCodeBlocks(tx);
 
   tx = linewrap(tx, { width: 80 });
   // tx = tx.replace(/((?:^|\n)[ -\uFFFF]{80})/g, '$1 ¦ ');
   return tx.trim() + '\n';
 };
+
+
+EX.colonAfterBoldKeywordShouldBeBoldAsWell = /(\w+)(\*{2}):(\s|$)/g;
+
+EX.anythingButAsterisk = /[ -\)\+-\uFFFF]+/;
+
+EX.listItemWithBoldKeywordColon = rxu.join([
+  /\n(?:\d+\.|( {2}|) *\-) /, // Numbered list or indented bullet list
+  /\*{2}/,
+  '(', EX.anythingButAsterisk, ':)',
+  /\*{2}/,
+  /(?=\s|$)/,
+  /\n? +(\S[ -\uFFFF]*)/,
+], 'g');
 
 
 EX.unindentIndentedCodeBlocks = function u(tx) {
