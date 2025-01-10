@@ -27,6 +27,8 @@ EX = function reformat(input) {
   tx = tx.replace(/\n+(#{3,} )/g, '\n\n\n$1');
 
   tx = EX.unindentIndentedCodeBlocks(tx);
+  tx = tx.replace(/\n+( *`{3}\w)/g, '\n\n$1');
+  tx = tx.replace(/(^|\n)( *`{3})\n+/g, '$1$2\n\n');
 
   tx = linewrap(tx, { width: 80 });
   // tx = tx.replace(/((?:^|\n)[ -\uFFFF]{80})/g, '$1 ¦ ');
