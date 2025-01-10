@@ -16,6 +16,10 @@ EX = function reformat(input) {
   tx = tx.replace(EX.listItemWithCodeKeywordColon,  '\n$1* $2\n$1  $3');
   tx = tx.replace(/\n {2,}\- /g, '\n  * ');
 
+  // Entirely bold lines are probably meant as minor headlines:
+  tx = tx.replace(/(^|\n)\*{2}((?:(?!\*{2})[ -\uFFFF])+)\*{2}(?=\n|$)/g,
+    '$1### $2');
+
   // Blank line after heading:
   tx = tx.replace(/\n(#{2,4}) (\S[ -\uFFFF]+)\n+/g, '\n$1 $2\n\n');
   // Adjust blank lines before headings:
