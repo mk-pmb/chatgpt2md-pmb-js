@@ -6,11 +6,19 @@
 var EX, linewrap = require('ersatz-linewrap'),
   rxu = require('rxu');
 
+function orf(x) { return x || false; }
+function matchOrEmpty(t, r, g) { return (orf(t.match(r))[+g || 0] || ''); }
+
 
 EX = function reformat(input) {
-  var tx = input;
+  var tx = input, tailBlanks = '\n', hadBom = matchOrEmpty(tx, /^\uFEFF\n?/);
   tx = tx.replace(/\r|\f|\v/g, '');
-  tx = tx.replace(/(?:^|\n)\t+/g, m => m.replace(/\t/g, '  '));
+  if (hadBom) {
+    tx = tx.slice(hadBom.length);
+    tailBlanks = matchOrEmpty(tx, /\n+$/) || tailBlanks;
+  }
+  tx = tx.replace(/(?:^|\n)\t+/g,
+    function g(m) { return m.replace(/\t/g, '  '); });
   tx = tx.replace(EX.colonAfterBoldKeywordShouldBeBoldAsWell, '$1:$2$3');
   tx = tx.replace(EX.listItemWithBoldKeywordColon,  '\n$1* __$2__\n$1  $3');
   tx = tx.replace(EX.listItemWithCodeKeywordColon,  '\n$1* $2\n$1  $3');
@@ -32,7 +40,9 @@ EX = function reformat(input) {
 
   tx = linewrap(tx, { width: 80 });
   // tx = tx.replace(/((?:^|\n)[ -\uFFFF]{80})/g, '$1 ¦ ');
-  return tx.trim() + '\n';
+  tx = tx.trim();
+  if (!tx) { throw new Error('Output would be empty!'); }
+  return hadBom + tx + tailBlanks;
 };
 
 

@@ -1,5 +1,5 @@
 { "name": "chatgpt2md-pmb",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Reformat ChatGPT's markdown towards my own style.",
   "keywords": [],
 
@@ -17,7 +17,7 @@
   "private": true, "license": "ISC",
 
   "main": "reformat.js",
-  "bin": "cli.js",
+  "bin": "cli.sh",
 
   "dependencies": {
     "ersatz-linewrap": "^0.1.1",

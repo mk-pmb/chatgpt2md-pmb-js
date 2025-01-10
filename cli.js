@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 // eslint-disable-next-line spaced-comment
 /*jslint indent: 2, maxlen: 80, continue: false, unparam: false, node: true */
 /* -*- tab-width: 2 -*- */
