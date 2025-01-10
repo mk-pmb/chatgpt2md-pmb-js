@@ -10,8 +10,10 @@ var EX, linewrap = require('ersatz-linewrap'),
 EX = function reformat(input) {
   var tx = input;
   tx = tx.replace(/\r|\f|\v/g, '');
+  tx = tx.replace(/(?:^|\n)\t+/g, m => m.replace(/\t/g, '  '));
   tx = tx.replace(EX.colonAfterBoldKeywordShouldBeBoldAsWell, '$1:$2$3');
   tx = tx.replace(EX.listItemWithBoldKeywordColon,  '\n$1* __$2__\n$1  $3');
+  tx = tx.replace(EX.listItemWithCodeKeywordColon,  '\n$1* $2\n$1  $3');
   tx = tx.replace(/\n {2,}\- /g, '\n  * ');
 
   // Blank line after heading:
@@ -30,16 +32,21 @@ EX = function reformat(input) {
 
 EX.colonAfterBoldKeywordShouldBeBoldAsWell = /(\w+)(\*{2}):(\s|$)/g;
 
-EX.anythingButAsterisk = /[ -\)\+-\uFFFF]+/;
+EX.listItemKeywordRxBuilder = function liKwRx(fmtStart, kw, fmtEnd) {
+  return rxu.join([
+    /\n(?:\d+\.|( {2}|) *[\*\-]) /, /*
+      Numbered list or indented bullet list */
+    fmtStart, '(', kw, ':)', (fmtEnd || fmtStart),
+    /\n? +(\S[ -\uFFFF]*)/,
+  ].flat(), 'g');
+};
 
-EX.listItemWithBoldKeywordColon = rxu.join([
-  /\n(?:\d+\.|( {2}|) *\-) /, // Numbered list or indented bullet list
-  /\*{2}/,
-  '(', EX.anythingButAsterisk, ':)',
-  /\*{2}/,
-  /(?=\s|$)/,
-  /\n? +(\S[ -\uFFFF]*)/,
-], 'g');
+EX.anythingButAsterisk = /[ -\)\+-\uFFFF]+/;
+EX.anythingButBacktick = /[ -_a-\uFFFF]+/;
+EX.listItemWithBoldKeywordColon = EX.listItemKeywordRxBuilder(/\*{2}/,
+  EX.anythingButAsterisk);
+EX.listItemWithCodeKeywordColon = EX.listItemKeywordRxBuilder('',
+  [/`/, EX.anythingButBacktick, /`/]);
 
 
 EX.unindentIndentedCodeBlocks = function u(tx) {
