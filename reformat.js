@@ -17,8 +17,8 @@ EX = function reformat(input) {
     tx = tx.slice(hadBom.length);
     tailBlanks = matchOrEmpty(tx, /\n+$/) || tailBlanks;
   }
-  tx = tx.replace(/(?:^|\n)\t+/g,
-    function g(m) { return m.replace(/\t/g, '  '); });
+  tx = '\n' + tx + '\n';
+  tx = tx.replace(/\n\t+/g, function g(m) { return m.replace(/\t/g, '  '); });
   tx = tx.replace(EX.colonAfterBoldKeywordShouldBeBoldAsWell, '$1:$2$3');
   tx = tx.replace(EX.listItemWithBoldKeywordColon,  '\n$1* __$2__\n$1  $3');
   tx = tx.replace(EX.listItemWithCodeKeywordColon,  '\n$1* $2\n$1  $3');
@@ -47,7 +47,12 @@ EX = function reformat(input) {
 };
 
 
-EX.colonAfterBoldKeywordShouldBeBoldAsWell = /(\w+)(\*{2}):(\s|$)/g;
+EX.colonAfterBoldKeywordShouldBeBoldAsWell = rxu.join([
+  /(\w)/, // last letter of the keyword
+  // potential punctuation, e.g. "**C++**:" or "**strftime()**:":
+  /[\!\"\#\$\%\&\(\)\+\-\.\/\;\<\>\@\[\]\{\}\|\~]{0,2}/,
+  /(\*{2}):(\s|$)/,
+], 'g');
 
 EX.listItemKeywordRxBuilder = function liKwRx(fmtStart, kw, fmtEnd) {
   return rxu.join([
