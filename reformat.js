@@ -23,6 +23,7 @@ EX = function reformat(input) {
   tx = tx.replace(EX.listItemWithBoldKeywordColon,  '\n$1* __$2__\n$1  $3');
   tx = tx.replace(EX.listItemWithCodeKeywordColon,  '\n$1* $2\n$1  $3');
   tx = tx.replace(/\n {2,}\- /g, '\n  * ');
+  tx = tx.replace(/((?:^|\n)`{3})(\S*)/g, EX.fixNoLangCodeBlock.bind(EX, {}));
 
   // Entirely bold lines are probably meant as minor headlines:
   tx = tx.replace(/(^|\n)\*{2}((?:(?!\*{2})[ -\uFFFF])+)\*{2}(?=\n|$)/g,
@@ -80,6 +81,17 @@ EX.unindentIndentedCodeBlocks = function u(tx) {
   });
   tx = tx.replace(/\v/g, '');
   return tx;
+};
+
+
+
+EX.fixNoLangCodeBlock = function fixNoLangCodeBlock(state, orig, intro, lang) {
+  var prev = state.prevLang;
+  if (!(lang || prev)) { lang = 'text'; }
+  state.prevLang = lang;
+  if (prev && lang) { return intro + '\n' + intro + lang; }
+  // console.warn('fixNoLangCodeBlock', [intro, prev, lang]);
+  return intro + lang;
 };
 
 
