@@ -19,9 +19,9 @@ EX = function reformat(input) {
   }
   tx = '\n' + tx + '\n';
   tx = tx.replace(/\n\t+/g, function g(m) { return m.replace(/\t/g, '  '); });
-  tx = tx.replace(EX.colonAfterBoldKeywordShouldBeBoldAsWell, '$1:$2$3');
-  tx = tx.replace(EX.listItemWithBoldKeywordColon,  '\n$1* __$2__\n$1  $3');
-  tx = tx.replace(EX.listItemWithCodeKeywordColon,  '\n$1* $2\n$1  $3');
+  tx = EX.colonAfterBoldKeywordShouldBeBoldAsWell(tx),
+  tx = EX.listItemWithBoldKeywordColon(tx);
+  tx = EX.listItemWithCodeKeywordColon(tx);
   tx = tx.replace(/\n {2,}\- /g, '\n  * ');
   tx = tx.replace(/((?:^|\n)`{3})(\S*)/g, EX.fixNoLangCodeBlock.bind(EX, {}));
 
@@ -47,28 +47,30 @@ EX = function reformat(input) {
 };
 
 
-EX.colonAfterBoldKeywordShouldBeBoldAsWell = rxu.join([
+EX.colonAfterBoldKeywordShouldBeBoldAsWell = rxu.replacer(rxu.join([
   /(\w)/, // last letter of the keyword
   // potential punctuation, e.g. "**C++**:" or "**strftime()**:":
-  /[\!\"\#\$\%\&\(\)\+\-\.\/\;\<\>\@\[\]\{\}\|\~]{0,2}/,
-  /(\*{2}):(\s|$)/,
-], 'g');
+  /([\!\"\#\$\%\&\(\)\+\-\.\/\;\<\>\@\[\]\{\}\|\~]{0,2})/,
+  /(\*{2}):(?=\s|$)/,
+], 'g'), '$1$2:$3');
 
-EX.listItemKeywordRxBuilder = function liKwRx(fmtStart, kw, fmtEnd) {
-  return rxu.join([
+EX.makeListItemKeywordFixer = function liKwRx(kwRx, opt) {
+  if (!opt) { return liKwRx(kwRx, true); }
+  return rxu.replacer(rxu.join([
     /\n(?:\d+\.|( {2}|) *[\*\-]) /, /*
       Numbered list or indented bullet list */
-    fmtStart, '(', kw, ':)', (fmtEnd || fmtStart),
+    opt.fmtStartRx, '(', kwRx, ':)', (opt.fmtEndRx || opt.fmtStartRx),
     /\n? +(\S[ -\uFFFF]*)/,
-  ].flat(), 'g');
+  ].flat(), 'g'), ('\n$1* ' + (opt.kwWrapStart || opt.kwWrap || '')
+    + '$2' + (opt.kwWrapEnd || opt.kwWrap || '') + '\n$1  $3'));
 };
 
 EX.anythingButAsterisk = /[ -\)\+-\uFFFF]+/;
 EX.anythingButBacktick = /[ -_a-\uFFFF]+/;
-EX.listItemWithBoldKeywordColon = EX.listItemKeywordRxBuilder(/\*{2}/,
-  EX.anythingButAsterisk);
-EX.listItemWithCodeKeywordColon = EX.listItemKeywordRxBuilder('',
-  [/`/, EX.anythingButBacktick, /`/]);
+EX.listItemWithBoldKeywordColon = EX.makeListItemKeywordFixer(
+  EX.anythingButAsterisk, { fmtStartRx: /\*{2}/, kwWrap: '__' });
+EX.listItemWithCodeKeywordColon = EX.makeListItemKeywordFixer(
+  EX.anythingButBacktick, { fmtStartRx: /`/ });
 
 
 EX.unindentIndentedCodeBlocks = function u(tx) {
