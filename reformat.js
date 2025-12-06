@@ -9,6 +9,8 @@ var EX, linewrap = require('ersatz-linewrap'),
 function orf(x) { return x || false; }
 function matchOrEmpty(t, r, g) { return (orf(t.match(r))[+g || 0] || ''); }
 
+function mapLines(t, f) { return t.split('\n').map(f).join('\n'); }
+
 
 EX = function reformat(input) {
   var tx = input, tailBlanks = '\n', hadBom = matchOrEmpty(tx, /^\uFEFF\n?/);
@@ -39,7 +41,10 @@ EX = function reformat(input) {
   tx = tx.replace(/\n+( *`{3}\w)/g, '\n\n$1');
   tx = tx.replace(/(^|\n)( *`{3})\n+/g, '$1$2\n\n');
 
-  tx = linewrap(tx, { width: 80 });
+  tx = mapLines(tx, function maybeWrap(ln) {
+    if (EX.nowrapLineRgx.test(ln.trim())) { return ln; }
+    return linewrap(ln, { width: 80 });
+  });
   // tx = tx.replace(/((?:^|\n)[ -\uFFFF]{80})/g, '$1 ¦ ');
   tx = tx.trim();
   if (!tx) { throw new Error('Output would be empty!'); }
@@ -100,6 +105,9 @@ EX.fixNoLangCodeBlock = function fixNoLangCodeBlock(state, orig, intro, lang) {
   // console.warn('fixNoLangCodeBlock', [intro, prev, lang]);
   return intro + lang;
 };
+
+
+EX.nowrapLineRgx = /^[#|<>]+ /;
 
 
 
